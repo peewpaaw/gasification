@@ -24,5 +24,6 @@ urlpatterns = [
 API_ROOT_V1 = "api/v1"
 
 urlpatterns += [
-    path(f"{API_ROOT_V1}/accounts/", include("apps.accounts.urls"))
+    path(f"{API_ROOT_V1}/accounts/", include("apps.accounts.urls")),
+    path(f"{API_ROOT_V1}/erp/", include("apps.erp.urls")),
 ]
