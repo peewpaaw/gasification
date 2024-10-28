@@ -5,6 +5,8 @@ from django.utils.translation import gettext_lazy as _
 
 from .managers import UserManager
 
+from apps.erp.models import Counterparty
+
 
 class User(AbstractBaseUser, PermissionsMixin):
     login = models.CharField(_('login'), max_length=100, unique=True)
@@ -25,3 +27,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_full_name(self):
         return self.name
+
+
+class ClientProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='client')
+    counterparty = models.OneToOneField(Counterparty, on_delete=models.PROTECT, unique=True)

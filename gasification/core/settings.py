@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "django_filters",
     "django_rest_passwordreset",
     "rest_framework_simplejwt",
+    "drf_yasg",
 
     # apps
     "apps.accounts.apps.AccountsConfig",
@@ -63,6 +64,7 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
     ],
     #'DEFAULT_PAGINATION_CLASS': 'djangoGasification.pagination.CustomPageNumberPagination',
 }
