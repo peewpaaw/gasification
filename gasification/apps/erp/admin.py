@@ -5,9 +5,9 @@ from .models import Counterparty, ConstructionObject
 
 @admin.register(Counterparty)
 class CounterpartyAdmin(admin.ModelAdmin):
-    list_display = ('inn', 'name', 'guid')
+    list_display = ('id', 'inn', 'name', 'guid')
 
 
 @admin.register(ConstructionObject)
 class ConstructionObjectAdmin(admin.ModelAdmin):
-    list_display = ('counterparty', 'code', 'guid')
+    list_display = ('id', 'counterparty', 'code', 'guid')

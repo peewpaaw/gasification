@@ -1,12 +1,6 @@
 from django.db import models
 
-
-class BaseModelTimeAt(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        abstract = True
+from apps.utils.models import BaseModelTimeAt
 
 
 class Counterparty(BaseModelTimeAt):
