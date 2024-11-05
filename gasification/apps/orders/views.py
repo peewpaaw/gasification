@@ -26,12 +26,19 @@ class OrderViewSet(viewsets.ModelViewSet):
     @action(detail=True, url_path='accept', methods=['path', 'put'], permission_classes=[IsAdminUser])
     def accept(self, request, pk):
         instance = self.get_object()
-        instance.accept(self.request.user)
+        instance.change_status(status='accepted', user=self.request.user)
         return Response({'success': True}, status=status.HTTP_200_OK)
 
     @action(detail=True, url_path='cancel', methods=['path', 'put'],
-            permission_classes=[IsAdminUser, IsOwner])
+            permission_classes=[IsAdminUser | IsOwner])
     def cancel(self, request, pk):
         instance = self.get_object()
-        instance.cancel(self.request.user)
+        instance.change_status(status='cancel', user=self.request.user,)
         return Response({'success': True}, status=status.HTTP_200_OK)
+
+    def status_update(self, instance, status):
+        instance = self.get_object()
+        if instance is None:
+            return Response({"error": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+        instance.change_status(status=status, user=self.request.user)
+
