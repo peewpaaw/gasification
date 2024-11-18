@@ -1,9 +1,7 @@
-import datetime
 import logging
 
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
-from django.db import models, transaction
+from django.db import models
 
 from apps.erp.models import ConstructionObject
 from apps.utils.models import BaseModel, BaseModelTimeAt
@@ -40,13 +38,27 @@ ORDER_STATUSES = (
 )
 
 
+class OrderManager(models.Manager):
+    def _get_ids_in_status(self, status):
+        orders_ids = (OrderStatusHistory.objects
+                      .filter(status=status)
+                      .values('order')
+                      .annotate(max_date=models.Max('created_at')))
+        if orders_ids:
+            return orders_ids.values_list('order', flat=True)
+        return []
+
+    def get_by_status(self, status):
+        return self.filter(pk__in=self._get_ids_in_status(status=status))
+
+
 class Order(BaseModel):
     construction_object = models.ForeignKey(ConstructionObject, on_delete=models.PROTECT)
     order_type = models.ForeignKey("OrderType", on_delete=models.CASCADE)
     selected_date = models.DateField()
     applicant = models.CharField(max_length=255)
 
-    on_date = models.DateField()
+    on_date = models.DateField(null=True, blank=True)
     employee = models.ForeignKey(
         get_user_model(),
         on_delete=models.PROTECT,
@@ -54,9 +66,11 @@ class Order(BaseModel):
         null=True,
         related_name='related_orders'
     )
+    objects = OrderManager()
 
     def get_related_status(self):
-        return OrderStatusHistory.objects.filter(order=self).order_by('-created_at').first()
+        #return OrderStatusHistory.objects.filter(order=self).order_by('-created_at').first()
+        return self.status_history.order_by('-created_at').first()
 
     class Meta:
         verbose_name = 'Order'
@@ -64,7 +78,7 @@ class Order(BaseModel):
 
 
 class OrderStatusHistory(BaseModel):
-    order = models.ForeignKey("Order", on_delete=models.CASCADE)
+    order = models.ForeignKey("Order", on_delete=models.CASCADE, related_name='status_history')
     status = models.CharField(choices=ORDER_STATUSES, max_length=100)
     on_date = models.DateField(blank=True, null=True)
 

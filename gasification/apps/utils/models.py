@@ -8,6 +8,8 @@ class BaseModelTimeAt(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    objects = models.Manager()
+
     class Meta:
         abstract = True
 
@@ -19,6 +21,8 @@ class BaseModelCreatedBy(models.Model):
         related_name="%(app_label)s_%(class)s_related",
     )
     #updated_by = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.PROTECT)
+
+    objects = models.Manager()
 
     class Meta:
         abstract = True

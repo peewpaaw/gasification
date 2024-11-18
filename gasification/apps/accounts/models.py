@@ -32,3 +32,9 @@ class User(AbstractBaseUser, PermissionsMixin):
 class ClientProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='client')
     counterparty = models.OneToOneField(Counterparty, on_delete=models.PROTECT, unique=True)
+
+    objects = models.Manager()
+
+    class Meta:
+        verbose_name = _('Client profile')
+        verbose_name_plural = _('Client profiles')

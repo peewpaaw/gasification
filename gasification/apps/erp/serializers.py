@@ -9,7 +9,19 @@ class CounterpartySerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class CounterpartySimpleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Counterparty
+        fields = ('id', 'inn', 'name', 'guid')
+
+
 class ConstructionObjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = ConstructionObject
         fields = "__all__"
+
+
+class ConstructionObjectSimpleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ConstructionObject
+        fields = ('id', 'code')

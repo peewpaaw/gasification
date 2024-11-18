@@ -5,7 +5,7 @@ from rest_framework.validators import UniqueValidator
 from .models import User, ClientProfile
 
 from apps.erp.models import Counterparty
-from apps.erp.serializers import CounterpartySerializer
+from apps.erp.serializers import CounterpartySimpleSerializer
 
 
 ##############################
@@ -13,7 +13,7 @@ from apps.erp.serializers import CounterpartySerializer
 ##############################
 
 class ClientProfileSerializer(serializers.ModelSerializer):
-    counterparty = CounterpartySerializer()
+    counterparty = CounterpartySimpleSerializer()
 
     class Meta:
         model = ClientProfile
@@ -36,7 +36,7 @@ class UserAsClientViewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'login', 'email', 'last_login', 'is_staff', 'is_active', 'client',)
+        fields = ('id', 'login', 'email', 'name', 'last_login', 'is_active', 'client',)
 
 
 class UserAsClientCreateSerializer(serializers.ModelSerializer):
@@ -80,13 +80,13 @@ class UserAsClientCreateSerializer(serializers.ModelSerializer):
 ##########################
 
 class UserInfoSerializer(serializers.ModelSerializer):
-    client_profile = serializers.SerializerMethodField()
+    client = serializers.SerializerMethodField()
 
-    def get_client_profile(self, obj):
+    def get_client(self, obj):
         client = getattr(obj, "client", None)
         if client:
             return ClientProfileSerializer(client).data
 
     class Meta:
         model = User
-        fields = ('login', 'email', 'is_staff', 'is_active', 'client_profile')
+        fields = ('id', 'login', 'email', 'name', 'is_staff', 'is_active', 'client')
