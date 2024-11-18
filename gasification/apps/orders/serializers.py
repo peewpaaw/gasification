@@ -64,19 +64,11 @@ class OrderStatusUpdateSerializer(serializers.ModelSerializer):
         return value
 
 
-class OrderAcceptSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Order
-        fields = ('employee',)
+class OrderOnConfirmSerializer(serializers.Serializer):
+    on_date = serializers.DateField()
 
+    def validate_on_date(self, value):
+        print('validate `on_date`!')
+        return value
 
-class OrderOnConfirmSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Order
-        fields = ('on_date', 'employee')
-
-
-class OrderCancelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Order
 
