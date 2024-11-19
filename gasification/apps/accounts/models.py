@@ -15,6 +15,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(_('date joined'), auto_now_add=True)
     is_staff = models.BooleanField(_('is staff'), default=True)
     is_active = models.BooleanField(_('active'), default=True)
+    # only for clients
+    counterparty = models.ForeignKey(Counterparty,
+                                     on_delete=models.PROTECT,
+                                     related_name='user',
+                                     blank=True,
+                                     null=True)
 
     objects = UserManager()
 

@@ -5,21 +5,15 @@ from .models import Counterparty, ConstructionObject
 from .serializers import CounterpartySerializer, ConstructionObjectSerializer
 
 
-class CounterpartyViewSet(viewsets.ModelViewSet):
+class CounterpartyViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Counterparty.objects.all()
+    serializer_class = CounterpartySerializer
     permission_classes = [IsAdminUser]
 
-    def get_serializer_class(self):
-        return CounterpartySerializer
 
-    def get_queryset(self):
-        return Counterparty.objects.all()
-
-
-class ConstructionObjectViewSet(viewsets.ModelViewSet):
+class ConstructionObjectViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
-
-    def get_serializer_class(self):
-        return ConstructionObjectSerializer
+    serializer_class = ConstructionObjectSerializer
 
     def get_queryset(self):
         queryset = ConstructionObject.objects.all()

@@ -165,15 +165,26 @@ EMAIL_PORT = os.environ.get("EMAIL_PORT")
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': 'order_status_changes.log',
+            'filename': 'order_status_transition.log',
+            'formatter': 'verbose'
         },
     },
     'loggers': {
-        'order_status': {
+        'order_status_transition': {
             'handlers': ['file'],
             'level': 'INFO',
             'propagate': True,

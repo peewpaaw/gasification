@@ -4,12 +4,12 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
 from .models import User
-from .serializers import UserAsClientViewSerializer, UserAsClientCreateSerializer, UserInfoSerializer
+from .serializers import UserAsClientViewSerializer, UserAsClientCreateSerializer, UserInfoSerializer, \
+    UserAsStaffViewSerializer, UserAsStaffCreateSerializer
 
 
 class UserAsClientViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminUser]
-    serializer_class = UserInfoSerializer
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve',):
@@ -19,6 +19,19 @@ class UserAsClientViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return User.objects.filter(is_staff=False)
+
+
+class UserAsStaffViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAdminUser]
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve',):
+            return UserAsStaffViewSerializer
+        if self.action in ('create', 'update', 'partial_update'):
+            return UserAsStaffCreateSerializer
+
+    def get_queryset(self):
+        return User.objects.filter(is_staff=True)
 
 
 class UserMeView(APIView):

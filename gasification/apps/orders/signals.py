@@ -2,9 +2,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from .models import Order, OrderStatusHistory
-from apps.orders.models import STATUS_CREATED, STATUS_ACCEPTED, \
-    STATUS_CANCELLED, STATUS_ON_CONFIRM, \
-    STATUS_REJECTED, STATUS_AGREED
+from apps.orders.models import STATUS_ACCEPTED, STATUS_REJECTED, STATUS_AGREED
+
 
 
 @receiver(post_save, sender=Order)

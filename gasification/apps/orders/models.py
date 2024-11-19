@@ -2,6 +2,7 @@ import logging
 
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.db.models import Subquery
 
 from apps.erp.models import ConstructionObject
 from apps.utils.models import BaseModel, BaseModelTimeAt
@@ -39,17 +40,20 @@ ORDER_STATUSES = (
 
 
 class OrderManager(models.Manager):
-    def _get_ids_in_status(self, status):
-        orders_ids = (OrderStatusHistory.objects
-                      .filter(status=status)
-                      .values('order')
-                      .annotate(max_date=models.Max('created_at')))
-        if orders_ids:
-            return orders_ids.values_list('order', flat=True)
+    def _get_order_ids_in_status(self, status):
+        latest_created_at_status_for_each_order = (OrderStatusHistory.objects
+                                                   .values('order')
+                                                   .annotate(max_created_at=models.Max('created_at')))
+        if latest_created_at_status_for_each_order:
+            max_created_at_values = latest_created_at_status_for_each_order.values('max_created_at')
+            order_ids_with_status = (OrderStatusHistory.objects
+                                     .filter(status=status, created_at__in=Subquery(max_created_at_values))
+                                     .values_list('order', flat=True))
+            return order_ids_with_status
         return []
 
     def get_by_status(self, status):
-        return self.filter(pk__in=self._get_ids_in_status(status=status))
+        return self.filter(pk__in=self._get_order_ids_in_status(status=status))
 
 
 class Order(BaseModel):
@@ -69,7 +73,6 @@ class Order(BaseModel):
     objects = OrderManager()
 
     def get_related_status(self):
-        #return OrderStatusHistory.objects.filter(order=self).order_by('-created_at').first()
         return self.status_history.order_by('-created_at').first()
 
     class Meta:
