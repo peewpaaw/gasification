@@ -88,3 +88,23 @@ class OrderStatusHistory(BaseModel):
     class Meta:
         verbose_name = 'Order statuses'
         verbose_name_plural = 'Order statuses'
+
+
+class OrderConfig(BaseModel):
+    order_count_per_day = models.PositiveIntegerField()
+    order_count_friday = models.PositiveIntegerField()
+    weekend_disabled = models.BooleanField(default=True)
+    updated_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Config'
+        verbose_name_plural = 'Config'
+
+
+class OrderConfigException(BaseModel):
+    on_date = models.DateField(unique=True)
+    order_count_per_day = models.PositiveIntegerField()
+
+    class Meta:
+        verbose_name = 'Config (exceptions)'
+        verbose_name_plural = 'Config (exceptions)'

@@ -1,22 +1,25 @@
 import django_filters
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema, no_body
 from rest_framework import viewsets, mixins, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.utils.permissions import IsOwner
 
 from apps.orders.services.order_status_flow import (order_accept, order_cancel,
                                                     order_on_confirm, order_agree, order_reject)
+from apps.orders.services.order_config import get_order_count_per_day_for_period
 
 from .filters import OrderFilter
-from .models import Order
+from .models import Order, OrderConfig
 from .serializers import OrderListRetrieveSerializer, OrderOnConfirmSerializer, OrderCreateSerializer, \
-    OrderUpdateSerializer
-
+    OrderUpdateSerializer, OrderConfigSerializer, OrderConfigExceptionCreateSerializer, OrderConfigStatsQuerySerializer, \
+    OrderConfigUpdateSerializer
 
 
 class OrderViewSet(mixins.CreateModelMixin,
@@ -104,6 +107,7 @@ class OrderViewSet(mixins.CreateModelMixin,
             return Response({'success': True}, status=status.HTTP_200_OK)
         return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(request_body=no_body)
     @action(detail=True, url_path='reject', methods=['post'], permission_classes=[IsOwner])
     def reject(self, request, pk):
         """
@@ -115,3 +119,85 @@ class OrderViewSet(mixins.CreateModelMixin,
         if order_reject(instance, self.request.user):
             return Response({'success': True}, status=status.HTTP_200_OK)
         return Response({'success': False}, status=status.HTTP_200_OK)
+
+
+class OrderConfigView(APIView):
+    my_instance = OrderConfig.objects.filter(pk=OrderConfig.objects.order_by('-created_at').first().pk)
+
+
+    def get(self, request, *args, **kwargs):
+        serializer_class = OrderConfigSerializer
+        serializer = serializer_class(self.my_instance, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, *args, **kwargs):
+        serializer_class = OrderConfigUpdateSerializer
+        serializer = serializer_class(self.my_instance, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(
+    tags=['config'],
+    method='get',
+    manual_parameters=[
+        openapi.Parameter(
+            'start_date',
+            openapi.IN_QUERY,
+            type=openapi.FORMAT_DATE,
+            required=True  # This makes the parameter required
+        ),
+        openapi.Parameter(
+            'end_date',
+            openapi.IN_QUERY,
+            type=openapi.FORMAT_DATE,
+            required=True  # This makes the parameter required
+        ),
+    ]
+)
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def get_config_state_view(request, *args, **kwargs):
+    """
+        Получение статистики по допустимому количеству заявок
+
+        Возвращает максимально допустимое количество заявок на каждую дату из периода (для календаря спец-ов СЗ)
+    """
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    if not start_date or not end_date:
+        return Response({"detail": "Required parameters in the query string are missing"},
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    result = get_order_count_per_day_for_period(start_date=start_date, end_date=end_date)
+
+    return Response({"result": result}, status=status.HTTP_200_OK)
+
+
+@swagger_auto_schema(
+    tags=['config'],
+    method='post',
+    request_body=OrderConfigExceptionCreateSerializer,  # Specify the serializer for the request body
+)
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def set_exception_date_view(request, *args, **kwargs):
+    """
+        Устанавливает ограничения по количеству заявок на отдельные даты
+
+        Используем для сокращенных дней, выходных дней (устанавливаем 0)
+    """
+    serializer_class = OrderConfigExceptionCreateSerializer
+    serializer = serializer_class(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+

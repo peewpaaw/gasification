@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from apps.erp.serializers import ConstructionObjectSimpleSerializer
 
-from .models import OrderType, Order, OrderStatusHistory, ORDER_STATUSES
+from .models import OrderType, Order, OrderStatusHistory, ORDER_STATUSES, OrderConfig, OrderConfigException
 
 
 ##########################
@@ -68,3 +68,38 @@ class OrderOnConfirmSerializer(serializers.Serializer):
     def validate_on_date(self, value):
         print('validate `on_date`!')
         return value
+
+
+############################
+# ORDER CONFIG SERIALIZERS #
+############################
+
+class OrderConfigSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderConfig
+        fields = "__all__"
+
+
+class OrderConfigUpdateSerializer(serializers.ModelSerializer):
+    updated_by = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        model = OrderConfig
+        fields = ('on_date', '')
+
+
+class OrderConfigExceptionCreateSerializer(serializers.ModelSerializer):
+    created_by = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        model = OrderConfigException
+        fields = ('on_date', 'order_count_per_day', 'created_by')
+
+
+class OrderConfigStatsQuerySerializer(serializers.Serializer):
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()

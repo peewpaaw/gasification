@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import OrderType, Order, OrderStatusHistory
+from .models import OrderType, Order, OrderStatusHistory, OrderConfig, OrderConfigException
 
 # Register your models here.
 
@@ -23,3 +23,13 @@ class OrderAdmin(admin.ModelAdmin):
 @admin.register(OrderType)
 class OrderTypeAdmin(admin.ModelAdmin):
     list_display = ('order_type',)
+
+
+@admin.register(OrderConfig)
+class OrderConfigAdmin(admin.ModelAdmin):
+    list_display = ('id', 'order_count_per_day', 'order_count_friday', 'weekend_disabled')
+
+
+@admin.register(OrderConfigException)
+class OrderConfigExceptionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'on_date', 'order_count_per_day', 'created_at', 'created_by')
