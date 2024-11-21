@@ -87,7 +87,7 @@ class OrderConfigUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderConfig
-        fields = ('on_date', '')
+        fields = ('order_count_per_day', 'order_count_friday', 'updated_by')
 
 
 class OrderConfigExceptionCreateSerializer(serializers.ModelSerializer):

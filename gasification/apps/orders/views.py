@@ -1,13 +1,14 @@
-import django_filters
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema, no_body
+
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.filters import SearchFilter
+from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema, no_body
 
 from apps.utils.permissions import IsOwner
 
@@ -26,7 +27,8 @@ class OrderViewSet(mixins.CreateModelMixin,
                    mixins.ListModelMixin,
                    viewsets.GenericViewSet):
     permission_classes = [IsAuthenticated, ]
-    filter_backends = [DjangoFilterBackend, SearchFilter,]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    ordering_fields = ['selected_date', 'on_date', 'created_at']
     filterset_class = OrderFilter
 
     def get_serializer_class(self):
@@ -47,8 +49,7 @@ class OrderViewSet(mixins.CreateModelMixin,
         if not self.request.user.is_authenticated:
             return Order.objects.none()
 
-        queryset = Order.objects.all()
-
+        queryset = Order.objects.all().order_by('-date', '-selected_date')
         if not self.request.user.is_staff:
            queryset = queryset.filter(created_by=self.request.user)
         return queryset
@@ -124,13 +125,29 @@ class OrderViewSet(mixins.CreateModelMixin,
 class OrderConfigView(APIView):
     my_instance = OrderConfig.objects.filter(pk=OrderConfig.objects.order_by('-created_at').first().pk)
 
-
+    @swagger_auto_schema(
+        tags=['config'],
+    )
     def get(self, request, *args, **kwargs):
+        """
+            Получение базовых ограничений по количеству заявок
+
+            Действуют в течение всего времени, кроме дней, заданных через `/set-exception-date`
+        """
         serializer_class = OrderConfigSerializer
         serializer = serializer_class(self.my_instance, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @swagger_auto_schema(
+        tags=['config'],
+        request_body=OrderConfigUpdateSerializer,
+    )
     def put(self, request, *args, **kwargs):
+        """
+            Изменение базовых ограничений по количеству заявок
+
+            Действуют в течение всего времени, кроме дней, заданных через `/set-exception-date`
+        """
         serializer_class = OrderConfigUpdateSerializer
         serializer = serializer_class(self.my_instance, data=request.data)
         if serializer.is_valid():
@@ -146,13 +163,13 @@ class OrderConfigView(APIView):
         openapi.Parameter(
             'start_date',
             openapi.IN_QUERY,
-            type=openapi.FORMAT_DATE,
+            type=openapi.TYPE_STRING,
             required=True  # This makes the parameter required
         ),
         openapi.Parameter(
             'end_date',
             openapi.IN_QUERY,
-            type=openapi.FORMAT_DATE,
+            type=openapi.TYPE_STRING,
             required=True  # This makes the parameter required
         ),
     ]
@@ -180,7 +197,7 @@ def get_config_state_view(request, *args, **kwargs):
 @swagger_auto_schema(
     tags=['config'],
     method='post',
-    request_body=OrderConfigExceptionCreateSerializer,  # Specify the serializer for the request body
+    request_body=OrderConfigExceptionCreateSerializer,
 )
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
@@ -196,8 +213,3 @@ def set_exception_date_view(request, *args, **kwargs):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
-
