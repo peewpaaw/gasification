@@ -123,7 +123,7 @@ class OrderViewSet(mixins.CreateModelMixin,
 
 
 class OrderConfigView(APIView):
-    my_instance = OrderConfig.objects.filter(pk=OrderConfig.objects.order_by('-created_at').first().pk)
+    my_instance = OrderConfig.objects.all()
 
     @swagger_auto_schema(
         tags=['config'],
