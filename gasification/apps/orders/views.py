@@ -49,7 +49,7 @@ class OrderViewSet(mixins.CreateModelMixin,
         if not self.request.user.is_authenticated:
             return Order.objects.none()
 
-        queryset = Order.objects.all().order_by('-date', '-selected_date')
+        queryset = Order.objects.all().order_by('-on_date', '-selected_date')
         if not self.request.user.is_staff:
            queryset = queryset.filter(created_by=self.request.user)
         return queryset
@@ -70,7 +70,7 @@ class OrderViewSet(mixins.CreateModelMixin,
     @action(detail=True, url_path='on_confirm', methods=['post'], permission_classes=[IsAdminUser])
     def on_confirm(self, request, pk):
         """
-            Подтверждение переноса заявки на новую дату клиентом.
+            Отправка заявки на согласование клиенту с новой датой.
 
             От клиента потребуется `/agree` или `/reject`
         """
