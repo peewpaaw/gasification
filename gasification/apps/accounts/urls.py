@@ -16,7 +16,7 @@ urlpatterns = router.urls
 
 
 urlpatterns += [
-    path('me/', UserMeView.as_view()),
+    path('me/', UserMeView.as_view(), name='me'),
 ]
 
 # TOKEN
