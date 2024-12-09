@@ -17,7 +17,7 @@ from apps.orders.services.order_status_flow import (order_accept, order_cancel,
 from apps.orders.services.order_config import get_order_count_per_day_for_period
 
 from .filters import OrderFilter
-from .models import Order, OrderConfig
+from .models import Order, OrderConfig, OrderConfigException
 from .serializers import OrderListRetrieveSerializer, OrderOnConfirmSerializer, OrderCreateSerializer, \
     OrderUpdateSerializer, OrderConfigSerializer, OrderConfigExceptionCreateSerializer, OrderConfigStatsQuerySerializer, \
     OrderConfigUpdateSerializer
@@ -149,7 +149,7 @@ class OrderConfigView(APIView):
             Действуют в течение всего времени, кроме дней, заданных через `/set-exception-date`
         """
         serializer_class = OrderConfigUpdateSerializer
-        serializer = serializer_class(self.my_instance, data=request.data)
+        serializer = serializer_class(self.my_instance.first(), data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -208,7 +208,18 @@ def set_exception_date_view(request, *args, **kwargs):
         Используем для сокращенных дней, выходных дней (устанавливаем 0)
     """
     serializer_class = OrderConfigExceptionCreateSerializer
-    serializer = serializer_class(data=request.data)
+    serializer_params = {
+        "data": request.data,
+        "context": {"request": request},
+    }
+
+    # if exception exist for this date -> updating
+    if request.data.get('on_date'):
+        existing_exception = OrderConfigException.objects.filter(on_date=request.data['on_date'])
+        if existing_exception:
+            serializer_params['instance'] = existing_exception.first()
+
+    serializer = serializer_class(**serializer_params)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
