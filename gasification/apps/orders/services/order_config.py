@@ -31,10 +31,13 @@ def _get_order_count_per_day_on_date(date: datetime, order_config: OrderConfig) 
     exception_date = OrderConfigException.objects.filter(on_date=date)
     if exception_date.exists():
         return exception_date.first().order_count_per_day
-    if date.weekday() in [1, 2, 3, 4]:
+    # Monday - Thursday
+    if date.weekday() in [0, 1, 2, 3]:
         return order_config.order_count_per_day
-    if date.weekday() in [5]:
+    # Friday
+    if date.weekday() in [4]:
         return order_config.order_count_friday
-    if date.weekday() in [6, 7] and not order_config.weekend_disabled:
+    # Saturday, Sunday
+    if date.weekday() in [5, 6] and not order_config.weekend_disabled:
         return order_config.order_count_friday
     return 0
