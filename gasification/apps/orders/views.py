@@ -17,10 +17,10 @@ from apps.orders.services.order_status_flow import (order_accept, order_cancel,
 from apps.orders.services.order_config import get_order_count_per_day_for_period
 
 from .filters import OrderFilter
-from .models import Order, OrderConfig, OrderConfigException
+from .models import Order, OrderConfig, OrderConfigException, OrderType
 from .serializers import OrderListRetrieveSerializer, OrderOnConfirmSerializer, OrderCreateSerializer, \
     OrderUpdateSerializer, OrderConfigSerializer, OrderConfigExceptionCreateSerializer, OrderConfigStatsQuerySerializer, \
-    OrderConfigUpdateSerializer
+    OrderConfigUpdateSerializer, OrderTypeSerializer
 
 
 class OrderViewSet(mixins.CreateModelMixin,
@@ -120,6 +120,12 @@ class OrderViewSet(mixins.CreateModelMixin,
         if order_reject(instance, self.request.user):
             return Response({'success': True}, status=status.HTTP_200_OK)
         return Response({'success': False}, status=status.HTTP_200_OK)
+
+
+class OrderTypeViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [IsAuthenticated]
+    queryset = OrderType.objects.all()
+    serializer_class = OrderTypeSerializer
 
 
 class OrderConfigView(APIView):

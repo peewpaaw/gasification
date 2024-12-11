@@ -12,7 +12,7 @@ from .models import OrderType, Order, OrderStatusHistory, ORDER_STATUSES, OrderC
 class OrderTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderType
-        fields = ('order_type', 'guid')
+        fields = ('id', 'order_type', 'guid')
 
 
 ####################################

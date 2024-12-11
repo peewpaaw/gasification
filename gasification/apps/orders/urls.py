@@ -1,11 +1,11 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
-from .views import OrderViewSet, OrderConfigView, get_config_state_view, set_exception_date_view
+from .views import OrderViewSet, OrderConfigView, get_config_state_view, set_exception_date_view, OrderTypeViewSet
 
 router = DefaultRouter()
 router.register(r'', OrderViewSet, basename='orders')
-#router.register(r'config', OrderConfigViewSet, basename='config')
+router.register('order-types', OrderTypeViewSet, basename='order-types')
 
 urlpatterns = router.urls
 

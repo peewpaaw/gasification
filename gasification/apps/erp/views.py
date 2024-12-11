@@ -18,5 +18,5 @@ class ConstructionObjectViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         queryset = ConstructionObject.objects.all()
         if self.request.user.is_authenticated and not self.request.user.is_staff:
-            queryset = queryset.filter(counterparty=self.request.user.client.counterparty)
+            queryset = queryset.filter(counterparty=self.request.user.counterparty)
         return queryset
