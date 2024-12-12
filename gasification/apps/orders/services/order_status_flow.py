@@ -20,15 +20,22 @@ ALLOWED_STATUS_TRANSITIONS = {
 
 logger = logging.getLogger('order_status_transition')
 
+class CustomServiceError(Exception):
+    """Custom Exception class for service errors"""
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
 
 def logger_send_message_init(order_id, status):
     logger.info(f"INIT status transition: -> {status} | ORDER: {order_id}")
 
 
-class OrderStatusTransitionError:
-    def get_invalid_status_transition_message(self, a, b):
-        acceptable_statuses = ",".join(ALLOWED_STATUS_TRANSITIONS[a]) if ALLOWED_STATUS_TRANSITIONS[a] else None
-        return f"Статус заявки не может быть изменен с `{a}` -> `{b}`. Допустимые статусы: {acceptable_statuses}"
+class OrderExceptionMessages:
+    @staticmethod
+    def get_invalid_status_transition_message(new_status):
+        # acceptable_statuses = ",".join(ALLOWED_STATUS_TRANSITIONS[a]) if ALLOWED_STATUS_TRANSITIONS[a] else None
+        # return f"Статус заявки не может быть изменен с `{a}` -> `{b}`. Допустимые статусы: {acceptable_statuses}"
+        return f"Статус заявки не может быть изменен на `{new_status}`."
 
     def get_invalid_max_count_message(self):
         return f"Превышен лимит заявок на выбранную дату."
@@ -37,17 +44,16 @@ class OrderStatusTransitionError:
         return f"Прием заявок закрыт."
 
 
+
 def status_transition_check(order: Order, new_status) -> bool:
     """
     Checks if the status can be changed from current status to `new_status`
     """
     current_status = order.get_related_status().status
-    try:
-        if new_status not in ALLOWED_STATUS_TRANSITIONS[current_status]:
-            raise ValidationError(f"INVALID status transition: {current_status} -> {new_status} | ORDER: {order}")
-    except ValidationError as e:
-        logger.error(e)
-        return False
+    if new_status not in ALLOWED_STATUS_TRANSITIONS[current_status]:
+        message = OrderExceptionMessages.get_invalid_status_transition_message(new_status)
+        logger.error(f"Invalid status transition: {current_status} -> {new_status} | Order: {order.id}")
+        raise CustomServiceError(message)
     return True
 
 

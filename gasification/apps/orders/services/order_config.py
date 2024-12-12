@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from apps.orders.models import OrderConfig, OrderConfigException
+from apps.orders.models import OrderConfig, OrderConfigException, Order
 
 
 def get_order_count_per_day_for_period(start_date, end_date):
@@ -41,3 +41,15 @@ def _get_order_count_per_day_on_date(date: datetime, order_config: OrderConfig) 
     if date.weekday() in [5, 6] and not order_config.weekend_disabled:
         return order_config.order_count_friday
     return 0
+
+def order_can_be_created(on_date):
+    order_count = Order.objects.filter(selected_date=on_date).count()
+    if order_count < _get_order_count_per_day_on_date(on_date, OrderConfig.get_related_config()):
+        return True
+    return False
+
+def order_creating_is_available():
+    order_config = OrderConfig.get_related_config()
+    if order_config.time_start <= datetime.now().time() <= order_config.time_end:
+        return True
+    return False

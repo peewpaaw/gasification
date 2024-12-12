@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 from django.contrib.auth import get_user_model
@@ -96,7 +97,13 @@ class OrderConfig(BaseModel):
     order_count_per_day = models.PositiveIntegerField()
     order_count_friday = models.PositiveIntegerField()
     weekend_disabled = models.BooleanField(default=True)
+    time_start = models.TimeField(default=datetime.time(0, 0))
+    time_end = models.TimeField(default=datetime.time(23, 59, 59))
     #updated_by = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+
+    @staticmethod
+    def get_related_config():
+        return OrderConfig.objects.order_by('-created_at').first()
 
     class Meta:
         verbose_name = 'Config'

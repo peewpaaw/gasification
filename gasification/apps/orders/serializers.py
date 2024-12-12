@@ -1,8 +1,10 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from apps.erp.serializers import ConstructionObjectSimpleSerializer
 
 from .models import OrderType, Order, OrderStatusHistory, ORDER_STATUSES, OrderConfig, OrderConfigException
+from .services.order_config import order_can_be_created, order_creating_is_available
 
 
 ##########################
@@ -40,6 +42,13 @@ class OrderCreateSerializer(serializers.ModelSerializer):
     created_by = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
+
+    def validate(self, attrs):
+        if not order_creating_is_available():
+            raise ValidationError({'selected_date': f"Прием заявок закрыт."})
+        if not order_can_be_created(attrs['selected_date']):
+            raise ValidationError({"selected_date": f"Превышен лимит заявок на дату `{attrs['selected_date']}`"})
+        return attrs
 
     class Meta:
         model = Order
@@ -87,7 +96,8 @@ class OrderConfigUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderConfig
-        fields = ('order_count_per_day', 'order_count_friday', 'updated_by')
+        fields = ('order_count_per_day', 'order_count_friday',
+                  'time_start', 'time_end', 'updated_by')
 
 
 class OrderConfigExceptionCreateSerializer(serializers.ModelSerializer):

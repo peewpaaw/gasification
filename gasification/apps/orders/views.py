@@ -13,8 +13,8 @@ from drf_yasg.utils import swagger_auto_schema, no_body
 from apps.utils.permissions import IsOwner
 
 from apps.orders.services.order_status_flow import (order_accept, order_cancel,
-                                                    order_on_confirm, order_agree, order_reject)
-from apps.orders.services.order_config import get_order_count_per_day_for_period
+                                                    order_on_confirm, order_agree, order_reject, CustomServiceError)
+from apps.orders.services.order_config import get_order_count_per_day_for_period, order_creating_is_available
 
 from .filters import OrderFilter
 from .models import Order, OrderConfig, OrderConfigException, OrderType
@@ -63,9 +63,14 @@ class OrderViewSet(mixins.CreateModelMixin,
             Заявка получит статус `accepted` на выбранную клиентом дату (`selected_date`).
         """
         instance = self.get_object()
-        if order_accept(instance, self.request.user):
+        try:
+            order_accept(instance, self.request.user)
             return Response({'success': True}, status=status.HTTP_200_OK)
-        return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
+        except CustomServiceError as e:
+            return Response({'success': False, 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        #if order_accept(instance, self.request.user):
+        #    return Response({'success': True}, status=status.HTTP_200_OK)
+        #return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, url_path='on_confirm', methods=['post'], permission_classes=[IsAdminUser])
     def on_confirm(self, request, pk):
@@ -104,9 +109,12 @@ class OrderViewSet(mixins.CreateModelMixin,
             Заявка получит статус `accepted` на предложенную спец-ом СЗ дату.
         """
         instance = self.get_object()
-        if order_agree(instance, self.request.user):
+        try:
+            order_agree(instance, self.request.user)
             return Response({'success': True}, status=status.HTTP_200_OK)
-        return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
+        except CustomServiceError as e:
+            return Response({'success': False, 'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        #return Response({'success': False}, status=status.HTTP_400_BAD_REQUEST)
 
     @swagger_auto_schema(request_body=no_body)
     @action(detail=True, url_path='reject', methods=['post'], permission_classes=[IsOwner])
@@ -129,6 +137,7 @@ class OrderTypeViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class OrderConfigView(APIView):
+    permission_classes = [IsAdminUser]
     my_instance = OrderConfig.objects.all()
 
     @swagger_auto_schema(
@@ -230,3 +239,18 @@ def set_exception_date_view(request, *args, **kwargs):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@swagger_auto_schema(
+    tags=['config'],
+    method='get',
+)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def orders_is_available_view(request, *args, **kwargs):
+    """
+        Проверяет, доступен ли прием новых заявок.
+
+        Сравнивает текущее время с `time_start` и `time_end` в первичной настройке (`OrderConfig`)
+    """
+    return Response({"status": order_creating_is_available()}, status=status.HTTP_200_OK)
