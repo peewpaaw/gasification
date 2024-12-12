@@ -101,7 +101,8 @@ def order_agree(order: Order, user):
         _create_new_order_status(
             order=order,
             status=STATUS_AGREED,
-            user=user
+            user=user,
+            on_date=order.get_related_status().on_date
         )
         return True
     except Exception as e:
