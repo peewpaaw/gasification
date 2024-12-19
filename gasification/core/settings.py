@@ -16,7 +16,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -42,7 +41,9 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with']
 
-CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS").split(" ")
+CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", [])
+if CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS = CSRF_TRUSTED_ORIGINS.split(" ")
 
 # Application definition
 
@@ -55,11 +56,13 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 
     "rest_framework",
-    #"corsheaders",
+    "corsheaders",
     "django_filters",
     "django_rest_passwordreset",
     "rest_framework_simplejwt",
     "drf_yasg",
+    "celery",
+    "django_celery_results",
 
     # apps
     "apps.accounts.apps.AccountsConfig",
@@ -70,7 +73,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    #"corsheaders.middleware.CorsMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -179,6 +182,13 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 EMAIL_PORT = os.environ.get("EMAIL_PORT")
 
+EMAIL_SENDER = os.getenv('EMAIL_SENDER', 'no-reply@example.com')
+FRONTEND_SIGNUP_URL = os.environ.get("FRONTEND_SIGNUP_URL")
+FRONTEND_PASSWORD_RESET_URL = os.getenv('FRONTEND_PASSWORD_RESET_URL')
+FRONTEND_URL = os.environ.get("FRONTEND_URL")
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8000")
+
+BASE_LOG_DIR = os.path.join(BASE_DIR, 'logs')
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -196,9 +206,24 @@ LOGGING = {
         'file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': 'order_status_transition.log',
+            'filename': os.path.join(BASE_LOG_DIR, 'order_status_transition.log'),
+            #'filename': 'order_status_transition.log',
             'formatter': 'verbose'
         },
+        'mail_notifications_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_LOG_DIR, 'mail_notifications.log'),
+            #'filename': 'order_status_transition.log',
+            'formatter': 'verbose',
+        },
+        'accounts_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_LOG_DIR, 'accounts.log'),
+            #'filename': 'accounts.log',
+            'formatter': 'verbose'
+        }
     },
     'loggers': {
         'order_status_transition': {
@@ -206,5 +231,21 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
+        'mail_notifications':{
+            'handlers': ['mail_notifications_file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'accounts': {
+            'handlers': ['accounts_file'],
+            'level': 'INFO',
+            'propagate': True,
+        }
     },
 }
+
+# Celery settings
+CELERY_BROKER_URL = 'amqp://localhost:5672'  # RabbitMQ broker URL
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'

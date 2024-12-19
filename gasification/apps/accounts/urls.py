@@ -5,8 +5,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
-from .views import UserAsClientViewSet, UserAsStaffViewSet, UserMeView
-
+from .views import UserAsClientViewSet, UserAsStaffViewSet, UserMeView, ClientSignUpView, send_task_view
 
 router = DefaultRouter()
 router.register(r'clients', UserAsClientViewSet, basename='clients')
@@ -17,6 +16,8 @@ urlpatterns = router.urls
 
 urlpatterns += [
     path('me/', UserMeView.as_view(), name='me'),
+    path('sign-up/confirm/', ClientSignUpView.as_view(), name='signup'),
+    path('test-task/', send_task_view)
 ]
 
 # TOKEN
