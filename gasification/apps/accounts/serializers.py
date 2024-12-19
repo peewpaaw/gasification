@@ -12,20 +12,38 @@ from apps.erp.serializers import CounterpartySimpleSerializer
 # USER AS CLIENT SERIALIZERS #
 ##############################
 
-class UserAsClientViewSerializer(serializers.ModelSerializer):
+class UserAsClientListRetrieveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
         fields = ('id', 'login', 'email', 'name', 'last_login', 'is_active', 'counterparty',)
 
 
-class UserAsClientCreateSerializer(serializers.ModelSerializer):
+class UserAsClientCreateUpdateSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         required=True,
-        validators=[UniqueValidator(
-            queryset=User.objects.all(),
-            message="Пользователь с такой почтой уже существует.",
-        )],)
+    )
+    class Meta:
+        model = User
+        fields = ('email', 'counterparty')
+
+    def create(self, validated_data):
+        user = User.objects.create(
+            login=validated_data['counterparty'].inn,
+            name=validated_data['counterparty'].name,
+            email=validated_data['email'],
+            is_staff=False,
+            is_active=True,
+            is_approved=False,
+            counterparty=validated_data['counterparty'],
+        )
+        #user.set_password(validated_data['password'])
+        user.save()
+        return user
+
+
+class ClientSignUpSerializer(serializers.ModelSerializer):
+    token = serializers.CharField()
     password = serializers.CharField(
         write_only=True,
         required=True,
@@ -33,20 +51,10 @@ class UserAsClientCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'password', 'counterparty')
+        fields = ('password', 'token')
 
-    def create(self, validated_data):
-        user = User.objects.create(
-            login=validated_data['counterparty'].inn,
-            email=validated_data['email'],
-            is_staff=False,
-            counterparty=validated_data['counterparty'],
-        )
-        user.set_password(validated_data['password'])
-        user.save()
-        return user
-
-
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data['password'])
 ##############################
 # USERS AS STAFF SERIALIZERS #
 ##############################

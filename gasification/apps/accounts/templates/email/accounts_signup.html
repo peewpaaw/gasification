@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Восстановление пароля</title>
+<title>Регистрация</title>
 <style>
   body {
     display: flex;
@@ -58,13 +58,11 @@
 <body>
 
 <div class="card">
-  <h1>УП "Мингаз". Запрос на изменения пароля</h1>
-  <h3>{{ username }}</h3>
-    <p>Проверочный код: {{ token }}</p>
+  <h1>УП "Мингаз". Регистрация в личном кабинете</h1>
+  <h3>{{ name }}</h3>
   <p>Для подтверждения учетной записи, пожалуйста, перейдите по ссылке ниже:</p>
-  <p><a href="{{reset_password_url}}" style="color: #007bff; text-decoration: none;">Продолжить смену пароля</a></p>
+  <a href="{{ signup_url }}" style="color: #007bff;">Продолжить регистрацию.</a>
   <br>
-    <br>
   <table>
     <tr>
       <td>УП "Мингаз"</td>
