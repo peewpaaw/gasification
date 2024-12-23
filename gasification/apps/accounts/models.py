@@ -15,6 +15,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(_('date joined'), auto_now_add=True)
     is_staff = models.BooleanField(_('is staff'), default=True)
     is_active = models.BooleanField(_('active'), default=True)
+    is_approved = models.BooleanField(_('is approved'), default=True)
     # only for clients
     counterparty = models.ForeignKey(Counterparty,
                                      on_delete=models.PROTECT,
@@ -44,3 +45,46 @@ class ClientProfile(models.Model):
     class Meta:
         verbose_name = _('Client profile')
         verbose_name_plural = _('Client profiles')
+
+
+class TokenBaseModel(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    key = models.CharField(
+        max_length=64,
+        db_index=True,
+        unique=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField(
+        default="",
+        blank=True,
+        null=True,
+    )
+    user_agent = models.CharField(
+        max_length=512,
+        default="",
+        blank=True,
+    )
+
+    @staticmethod
+    def generate_key():
+        # generate the token using os.urandom and hexlify
+        from apps.accounts.token import generate_token
+        return generate_token()
+
+    def save(self, *args, **kwargs):
+        if not self.key:
+            self.key = self.generate_key()
+        return super(TokenBaseModel, self).save(*args, **kwargs)
+
+    class Meta:
+        abstract = True
+
+
+class TokenSignup(TokenBaseModel):
+    def __str__(self):
+        return f"Password sign-up token for user {self.user}"
+
+    class Meta:
+        verbose_name = _('Token (Sign-up)')
+        verbose_name_plural = _('Tokens (Sign-up)')
