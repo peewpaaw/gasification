@@ -38,7 +38,8 @@ def password_reset_token_created(sender, instance, reset_password_token, *args, 
     send_mail_message.delay(title=subject,
                             message=email_plaintext_message,
                             content=email_html_message,
-                            sender=settings.EMAIL_SENDER)
+                            sender=settings.EMAIL_SENDER,
+                            recipient=reset_password_token.user.email)
 
 
 @receiver(post_save, sender=TokenSignup)

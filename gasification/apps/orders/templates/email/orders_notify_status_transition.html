@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Личный кабинет</title>
+<style>
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: #f8f9fa;
+    font-family: Arial, sans-serif;
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    max-width: 500px;
+    width: 100%;
+  }
+
+  .card h1 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #333;
+  }
+
+  .card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    color: #555;
+  }
+
+  .card p {
+    margin-bottom: 1rem;
+    color: #666;
+    font-size: 1rem;
+  }
+
+  .card table {
+    width: 100%;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #555;
+  }
+
+  .card table td {
+    padding: 1px 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>УП "Мингаз". Изменение статуса заявки.</h1>
+  <h3>{{ name }}</h3>
+  <table>
+      <tr>
+          <td>Заявка:</td>
+          <td>{{ order_id }}</td>
+      </tr>
+      <tr>
+          <td>Тип заявки:</td>
+          <td>{{ order_type }}</td>
+      </tr>
+      <tr>
+          <td>Объект строительства:</td>
+          <td>{{ construction_object_code }}</td>
+      </tr>
+      <tr>
+          <td>Статус заявки:</td>
+          <td>{{ order_status }}</td>
+      </tr>
+  </table>
+  <br>
+  <p>Подобнее:</p>
+  <a href="{{ url }}" style="color: #007bff;">Личный кабинет</a>
+  <br>
+  <table>
+    <tr>
+      <td>УП "Мингаз"</td>
+    </tr>
+    <tr>
+      <td>г. Минск, ул. Ботаническая, 11, к.1</td>
+    </tr>
+    <tr>
+      <td>root@mingas.by</td>
+    </tr>
+  </table>
+</div>
+
+</body>
+</html>

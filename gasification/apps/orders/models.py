@@ -2,6 +2,7 @@ import datetime
 import logging
 
 from django.contrib.auth import get_user_model
+from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Subquery
@@ -59,13 +60,6 @@ class OrderManager(models.Manager):
     def get_by_statuses(self, statuses: []):
         return self.filter(pk__in=self._get_order_ids_in_status(statuses=statuses))
 
-    def get_active(self):
-        active_statuses = [STATUS_CREATED, STATUS_ACCEPTED, STATUS_ON_CONFIRM]
-        ids = []
-        for status in active_statuses:
-            ids += (self._get_order_ids_in_status(status=status))
-        return self.filter(pk__in=ids)
-
 
 class Order(BaseModel):
     construction_object = models.ForeignKey(ConstructionObject, on_delete=models.PROTECT)
@@ -121,6 +115,11 @@ class OrderConfig(BaseModel):
             MaxValueValidator(100),
         ]
     )
+    notification_on_statues = ArrayField(
+        models.CharField(max_length=100, choices=ORDER_STATUSES),
+        blank=True,
+        null=True,
+    )
 
     @staticmethod
     def get_related_config():
@@ -138,3 +137,4 @@ class OrderConfigException(BaseModel):
     class Meta:
         verbose_name = 'Config (exceptions)'
         verbose_name_plural = 'Config (exceptions)'
+
