@@ -2,6 +2,7 @@ import datetime
 import logging
 
 from django.contrib.auth import get_user_model
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Subquery
 
@@ -43,20 +44,27 @@ ORDER_STATUSES = (
 
 
 class OrderManager(models.Manager):
-    def _get_order_ids_in_status(self, status):
+    def _get_order_ids_in_status(self, statuses: []):
         latest_created_at_status_for_each_order = (OrderStatusHistory.objects
                                                    .values('order')
                                                    .annotate(max_created_at=models.Max('created_at')))
         if latest_created_at_status_for_each_order:
             max_created_at_values = latest_created_at_status_for_each_order.values('max_created_at')
             order_ids_with_status = (OrderStatusHistory.objects
-                                     .filter(status=status, created_at__in=Subquery(max_created_at_values))
+                                     .filter(status__in=statuses, created_at__in=Subquery(max_created_at_values))
                                      .values_list('order', flat=True))
             return order_ids_with_status
         return []
 
-    def get_by_status(self, status):
-        return self.filter(pk__in=self._get_order_ids_in_status(status=status))
+    def get_by_statuses(self, statuses: []):
+        return self.filter(pk__in=self._get_order_ids_in_status(statuses=statuses))
+
+    def get_active(self):
+        active_statuses = [STATUS_CREATED, STATUS_ACCEPTED, STATUS_ON_CONFIRM]
+        ids = []
+        for status in active_statuses:
+            ids += (self._get_order_ids_in_status(status=status))
+        return self.filter(pk__in=ids)
 
 
 class Order(BaseModel):
@@ -99,7 +107,20 @@ class OrderConfig(BaseModel):
     weekend_disabled = models.BooleanField(default=True)
     time_start = models.TimeField(default=datetime.time(0, 0))
     time_end = models.TimeField(default=datetime.time(23, 59, 59))
-    #updated_by = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    min_date = models.IntegerField(
+        default=0,
+        validators=[
+            MinValueValidator(0),
+            MaxValueValidator(100),
+        ]
+    )
+    max_date = models.IntegerField(
+        default=10,
+        validators=[
+            MinValueValidator(0),
+            MaxValueValidator(100),
+        ]
+    )
 
     @staticmethod
     def get_related_config():

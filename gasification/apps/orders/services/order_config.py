@@ -53,3 +53,30 @@ def order_creating_is_available():
     if order_config.time_start <= datetime.now().time() <= order_config.time_end:
         return True
     return False
+
+def get_available_dates():
+    order_config = OrderConfig.get_related_config()
+
+    start_date = datetime.now().date() + timedelta(days=order_config.min_date)
+    end_date = datetime.now().date() + timedelta(days=order_config.max_date)
+    period = get_stats_structure(start_date, end_date)
+    result = []
+    for item in period:
+        if _get_order_count_per_day_on_date(item, order_config) > get_active_order_count_on_date(item):
+            result.append(datetime.strftime(item, '%Y-%m-%d'))
+    return result
+
+def get_stats_structure(start_date, end_date):
+    result = []
+    current_date = start_date
+    while current_date <= end_date:
+        result.append(current_date)
+        current_date += timedelta(days=1)
+    return result
+
+def get_active_order_count_on_date(on_date):
+    accepted = Order.objects.get_by_statuses(statuses=['accepted'])\
+                .filter(on_date=on_date).count()
+    in_process = Order.objects.get_by_statuses(statuses=['created', 'on_confirm'])\
+                    .filter(selected_date=on_date).count()
+    return accepted + in_process

@@ -42,6 +42,8 @@ def order_config(staff_user):
         "weekend_disabled": True,
         "time_start": "00:00",
         "time_end": "23:59",
+        "min_date": 0,
+        "max_date": 10,
         "created_by": staff_user,
     }
     return OrderConfig.objects.create(**data)

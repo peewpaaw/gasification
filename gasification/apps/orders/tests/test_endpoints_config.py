@@ -29,6 +29,8 @@ def test_order_set_config_as_staff(api_client_as_staff, order_config):
         "order_count_friday": 100,
         "time_start": "14:00",
         "time_end": "15:00",
+        "min_date": 0,
+        "max_date": 10,
     }
     url = reverse("config")
     response = api_client_as_staff.put(url, data=data)
@@ -63,6 +65,7 @@ def test_order_set_exception_as_client(api_client_as_client, order_config):
 ##########################################
 # TEST ORDER CONFIG STATS ENDPOINTS  #
 ##########################################
+
 @pytest.mark.django_db
 def test_order_get_config_stats(api_client_as_staff, order_config):
     query_params = {

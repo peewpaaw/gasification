@@ -86,18 +86,16 @@ class OrderOnConfirmSerializer(serializers.Serializer):
 class OrderConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderConfig
-        fields = "__all__"
+        exclude = ('id', 'created_by')
+
 
 
 class OrderConfigUpdateSerializer(serializers.ModelSerializer):
-    updated_by = serializers.HiddenField(
-        default=serializers.CurrentUserDefault()
-    )
-
     class Meta:
         model = OrderConfig
         fields = ('order_count_per_day', 'order_count_friday',
-                  'time_start', 'time_end', 'updated_by')
+                  'time_start', 'time_end', 'min_date', 'max_date')
+        extra_kwargs = {"min_date": {"required": False}, "max_date": {"required": False}}
 
 
 class OrderConfigExceptionCreateSerializer(serializers.ModelSerializer):

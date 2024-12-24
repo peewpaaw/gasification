@@ -14,7 +14,8 @@ from apps.utils.permissions import IsOwner
 
 from apps.orders.services.order_status_flow import (order_accept, order_cancel,
                                                     order_on_confirm, order_agree, order_reject, CustomServiceError)
-from apps.orders.services.order_config import get_order_count_per_day_for_period, order_creating_is_available
+from apps.orders.services.order_config import (get_order_count_per_day_for_period, order_creating_is_available,
+                                               get_available_dates)
 
 from .filters import OrderFilter
 from .models import Order, OrderConfig, OrderConfigException, OrderType
@@ -138,7 +139,6 @@ class OrderTypeViewSet(viewsets.ReadOnlyModelViewSet):
 
 class OrderConfigView(APIView):
     permission_classes = [IsAdminUser]
-    my_instance = OrderConfig.objects.all()
 
     @swagger_auto_schema(
         tags=['config'],
@@ -149,8 +149,9 @@ class OrderConfigView(APIView):
 
             Действуют в течение всего времени, кроме дней, заданных через `/set-exception-date`
         """
+        instance = OrderConfig.get_related_config()
         serializer_class = OrderConfigSerializer
-        serializer = serializer_class(self.my_instance, many=True)
+        serializer = serializer_class(instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -163,8 +164,9 @@ class OrderConfigView(APIView):
 
             Действуют в течение всего времени, кроме дней, заданных через `/set-exception-date`
         """
+        instance = OrderConfig.get_related_config()
         serializer_class = OrderConfigUpdateSerializer
-        serializer = serializer_class(self.my_instance.first(), data=request.data, context={'request': request})
+        serializer = serializer_class(instance, data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -249,8 +251,17 @@ def set_exception_date_view(request, *args, **kwargs):
 @permission_classes([IsAuthenticated])
 def orders_is_available_view(request, *args, **kwargs):
     """
-        Проверяет, доступен ли прием новых заявок.
+        Проверяет, доступен ли прием новых заявок
 
         Сравнивает текущее время с `time_start` и `time_end` в первичной настройке (`OrderConfig`)
+        Доступные даты определяет с учетом `min_date`, `max_date`.
     """
-    return Response({"status": order_creating_is_available()}, status=status.HTTP_200_OK)
+    data = {
+        "status": order_creating_is_available(),
+        "available_dates": [],
+    }
+
+    if data['status']:
+        data['available_dates'] = get_available_dates()
+
+    return Response(data=data, status=status.HTTP_200_OK)

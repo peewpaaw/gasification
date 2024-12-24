@@ -139,7 +139,6 @@ def send_task_view(request, *args, **kwargs):
     """
         Тестовая задача для Celery
     """
-    from .tasks import test_task
+    from apps.services.tasks import test_task
     test_task.delay()
     return Response({"status": "OK"}, status=status.HTTP_200_OK)
-
