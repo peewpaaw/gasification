@@ -1,4 +1,5 @@
 from django.db.models.signals import post_save
+from django.db.transaction import on_commit
 from django.dispatch import receiver
 
 from .models import Order, OrderStatusHistory, STATUS_ON_CONFIRM, OrderConfig
@@ -27,10 +28,9 @@ def update_order(sender, instance, created, **kwargs):
         handler = status_handlers.get(instance.status)
         if handler:
             handler(instance)
-
-        if instance.status in OrderConfig.get_related_config().notification_on_statues:
-            send_notification_status_transition(instance.status, instance.order)
-
+        on_commit(lambda: send_notification_status_transition(instance.status, instance.order))
+        # if instance.status in OrderConfig.get_related_config().notification_on_statues:
+        #     send_notification_status_transition(instance.status, instance.order)
 
 
 def handle_accepted(status_instance: OrderStatusHistory):

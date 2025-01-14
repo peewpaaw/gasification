@@ -6,8 +6,9 @@ from django.urls import reverse
 from django_rest_passwordreset.signals import reset_password_token_created
 from django.conf import settings
 
-from apps.accounts.models import TokenSignup
 from apps.services.tasks import send_mail_message
+from apps.accounts.models import TokenSignup
+from apps.accounts.services.notifications import send_signup_confirmation_email
 
 
 @receiver(reset_password_token_created)
@@ -44,25 +45,4 @@ def password_reset_token_created(sender, instance, reset_password_token, *args, 
 
 @receiver(post_save, sender=TokenSignup)
 def account_token_signup_created(sender, instance, *args, **kwargs):
-    signup_url = settings.FRONTEND_SIGNUP_URL
-    if not signup_url:
-        signup_url = f"{settings.BACKEND_URL}{reverse('signup')}?token={instance.key}"
-
-    context = {
-        'account': instance.user,
-        'name': instance.user.name,
-        'email': instance.user.email,
-        'token': instance.key,
-        'signup_url': signup_url
-    }
-    email_html_message = render_to_string('email/accounts_signup.html', context)
-    email_plaintext_message = render_to_string('email/accounts_signup.txt', context)
-
-    subject = "Регистрация в личном кабинете."
-
-    # create Celery task
-    send_mail_message.delay(title=subject,
-                            message=email_plaintext_message,
-                            content=email_html_message,
-                            sender=settings.EMAIL_SENDER,
-                            recipient=[instance.user.email])
+    send_signup_confirmation_email(instance)

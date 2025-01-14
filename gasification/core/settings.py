@@ -207,21 +207,18 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.FileHandler',
             'filename': os.path.join(BASE_LOG_DIR, 'order_status_transition.log'),
-            #'filename': 'order_status_transition.log',
             'formatter': 'verbose'
         },
         'mail_notifications_file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_LOG_DIR, 'mail_notifications.log'),
-            #'filename': 'order_status_transition.log',
+            'filename': os.path.join(BASE_LOG_DIR, 'email_notifications.log'),
             'formatter': 'verbose',
         },
         'accounts_file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
             'filename': os.path.join(BASE_LOG_DIR, 'accounts.log'),
-            #'filename': 'accounts.log',
             'formatter': 'verbose'
         }
     },

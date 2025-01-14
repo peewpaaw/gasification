@@ -1,6 +1,6 @@
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.utils import swagger_auto_schema, no_body
 from rest_framework import viewsets, status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .models import User, TokenSignup
 from .serializers import UserAsClientListRetrieveSerializer, UserAsClientCreateUpdateSerializer, UserInfoSerializer, \
     UserAsStaffViewSerializer, UserAsStaffCreateSerializer, ClientSignUpSerializer
+from .services.notifications import send_signup_confirmation_email
 
 
 class UserAsClientViewSet(viewsets.ModelViewSet):
@@ -46,6 +47,22 @@ class UserAsClientViewSet(viewsets.ModelViewSet):
             TokenSignup.objects.create(user=obj)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @swagger_auto_schema(
+        tags=['clients'],
+        operation_summary="Повторная отправка письма для подтверждения регистрации",
+        request_body=no_body
+    )
+    @action(detail=True, url_path='resend-signup-email', methods=['post'], permission_classes=[IsAdminUser])
+    def resend_signup_confirmation_email(self, request, pk):
+        instance = self.get_object()
+        if instance.is_approved:
+            return Response({"detail": "User is already registered."}, status=status.HTTP_400_BAD_REQUEST)
+        token = TokenSignup.objects.filter(user=instance)
+        if not token.exists():
+            return Response({"detail": "User has no active token."}, status=status.HTTP_400_BAD_REQUEST)
+        send_signup_confirmation_email(token.first())
+        return Response({"detail": "Email sent."}, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(tags=['clients'], operation_summary="Обновление пользователя")
     def update(self, request, *args, **kwargs):
@@ -109,6 +126,7 @@ class UserMeView(APIView):
 
 
 class ClientSignUpView(APIView):
+    """Sign-up confirmations"""
     serializer_class = ClientSignUpSerializer
 
     @swagger_auto_schema(request_body=ClientSignUpSerializer)

@@ -1,12 +1,11 @@
-from django.core.exceptions import ValidationError
-from django.db import transaction
-
 import logging
+from django.db import transaction
 
 from apps.orders.models import Order, OrderStatusHistory, ORDER_STATUSES
 from apps.orders.models import STATUS_CREATED, STATUS_ACCEPTED, \
     STATUS_CANCELLED, STATUS_ON_CONFIRM, \
     STATUS_REJECTED, STATUS_AGREED
+
 
 ALLOWED_STATUS_TRANSITIONS = {
     STATUS_CREATED: [STATUS_ACCEPTED, STATUS_CANCELLED, STATUS_ON_CONFIRM],
@@ -16,7 +15,6 @@ ALLOWED_STATUS_TRANSITIONS = {
     STATUS_AGREED: [],
     STATUS_REJECTED: [],
 }
-
 
 logger = logging.getLogger('order_status_transition')
 
@@ -42,7 +40,6 @@ class OrderExceptionMessages:
 
     def get_invalid_create_timout_message(self):
         return f"Прием заявок закрыт."
-
 
 
 def status_transition_check(order: Order, new_status) -> bool:

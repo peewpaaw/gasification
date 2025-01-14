@@ -13,7 +13,6 @@ def get_order_count_per_day_for_period(start_date, end_date):
 
     return result
 
-
 def _get_order_count_per_day_for_period(start_date, end_date, order_config):
     result = []
 
@@ -25,7 +24,6 @@ def _get_order_count_per_day_for_period(start_date, end_date, order_config):
         result.append(date_dict)
         current_date += timedelta(days=1)
     return result
-
 
 def _get_order_count_per_day_on_date(date: datetime, order_config: OrderConfig) -> int:
     exception_date = OrderConfigException.objects.filter(on_date=date)
