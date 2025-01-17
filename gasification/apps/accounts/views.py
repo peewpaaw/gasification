@@ -6,17 +6,22 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
+from ..utils.paginations import CustomPageNumberPagination
+
+from .services.notifications import send_signup_confirmation_email
+
 from .models import User, TokenSignup
 from .serializers import UserAsClientListRetrieveSerializer, UserAsClientCreateUpdateSerializer, UserInfoSerializer, \
     UserAsStaffViewSerializer, UserAsStaffCreateSerializer, ClientSignUpSerializer
-from .services.notifications import send_signup_confirmation_email
+
+
 
 
 class UserAsClientViewSet(viewsets.ModelViewSet):
     """
         API endpoints for clients
     """
-
+    pagination_class = CustomPageNumberPagination
     permission_classes = [IsAdminUser]
     http_method_names = ['get', 'post', 'put', 'delete']
 
@@ -80,7 +85,7 @@ class UserAsStaffViewSet(viewsets.ModelViewSet):
     """
         API endpoints for staff
     """
-
+    pagination_class = CustomPageNumberPagination
     permission_classes = [IsAdminUser]
     http_method_names = ['get', 'post', 'put', 'delete']
 

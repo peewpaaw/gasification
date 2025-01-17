@@ -22,6 +22,7 @@ from .models import Order, OrderConfig, OrderConfigException, OrderType
 from .serializers import OrderListRetrieveSerializer, OrderOnConfirmSerializer, OrderCreateSerializer, \
     OrderUpdateSerializer, OrderConfigSerializer, OrderConfigExceptionCreateSerializer, OrderConfigStatsQuerySerializer, \
     OrderConfigUpdateSerializer, OrderTypeSerializer
+from ..utils.paginations import CustomPageNumberPagination
 
 
 class OrderViewSet(mixins.CreateModelMixin,
@@ -29,6 +30,7 @@ class OrderViewSet(mixins.CreateModelMixin,
                    viewsets.GenericViewSet):
     permission_classes = [IsAuthenticated, ]
     filter_backends = [DjangoFilterBackend, OrderingFilter]
+    pagination_class = CustomPageNumberPagination
     ordering_fields = ['selected_date', 'on_date', 'created_at']
     filterset_class = OrderFilter
 
