@@ -1,3 +1,4 @@
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 from apps.utils.models import BaseModelTimeAt
@@ -17,9 +18,20 @@ class Counterparty(BaseModelTimeAt):
 
 
 class ConstructionObject(BaseModelTimeAt):
+    WORK_PACKAGES = (
+        (1, 'ГСН (газопровод-ввод)'),
+        (2, 'ГСН (участок газопровода)'),
+        (3, 'ГСВ'),
+    )
     counterparty = models.ForeignKey('Counterparty', on_delete=models.CASCADE)
     code = models.CharField(max_length=255)
     guid = models.CharField(max_length=36)
+    address = models.CharField(max_length=255, blank=True, null=True)
+    work_packages = ArrayField(
+        models.SmallIntegerField(choices=WORK_PACKAGES),
+        blank=True,
+        null=True
+    )
 
     def __str__(self):
         return f"{self.code}"

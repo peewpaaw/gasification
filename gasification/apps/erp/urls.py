@@ -1,7 +1,8 @@
-from django.urls import path, include
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from .views import CounterpartyViewSet, ConstructionObjectViewSet
+from .views import CounterpartyUploadView, ConstructionObjectUploadView
 
 
 router = DefaultRouter()
@@ -11,5 +12,6 @@ router.register(r'construction-objects', ConstructionObjectViewSet, basename='ob
 urlpatterns = router.urls
 
 urlpatterns += [
-    # path('me', UserViewSet.as_view({'get': 'list'})),
+    path('upload/counterparties/', CounterpartyUploadView.as_view()),
+    path('upload/construction-objects/', ConstructionObjectUploadView.as_view()),
 ]
