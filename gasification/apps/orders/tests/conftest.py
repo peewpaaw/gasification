@@ -37,9 +37,9 @@ def order(construction_object, order_type, client_user):
 @pytest.fixture()
 def order_config(staff_user):
     data = {
-        "order_count_per_day": 1,
-        "order_count_friday": 1,
-        "weekend_disabled": True,
+        "order_count_per_day": 100,
+        "order_count_friday": 100,
+        "weekend_disabled": False,
         "time_start": "00:00",
         "time_end": "23:59",
         "min_date": 0,

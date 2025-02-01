@@ -12,9 +12,7 @@ from .services.notifications import send_signup_confirmation_email
 
 from .models import User, TokenSignup
 from .serializers import UserAsClientListRetrieveSerializer, UserAsClientCreateUpdateSerializer, UserInfoSerializer, \
-    UserAsStaffViewSerializer, UserAsStaffCreateSerializer, ClientSignUpSerializer
-
-
+    UserAsStaffViewSerializer, UserAsStaffCreateSerializer, ClientSignUpSerializer, ClientSignUpValidateTokenSerializer
 
 
 class UserAsClientViewSet(viewsets.ModelViewSet):
@@ -155,6 +153,22 @@ class ClientSignUpView(APIView):
 
         TokenSignup.objects.filter(user=token.user).delete()
         return Response({"status": "OK"}, status=status.HTTP_200_OK)
+
+class ClientSignUpValidateTokenView(APIView):
+    serializer_class = ClientSignUpValidateTokenSerializer
+
+    @swagger_auto_schema(request_body=ClientSignUpValidateTokenSerializer)
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        token = TokenSignup.objects.get(key=serializer.validated_data['token'])
+        response = {
+            "status": "OK",
+            "name": token.user.name,
+            "email": token.user.email,
+        }
+        return Response(response, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])

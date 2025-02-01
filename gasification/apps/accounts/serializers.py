@@ -2,10 +2,9 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from .models import User, ClientProfile
-
-from apps.erp.models import Counterparty
 from apps.erp.serializers import CounterpartySimpleSerializer
+
+from .models import User, TokenSignup
 
 
 ##############################
@@ -55,6 +54,20 @@ class ClientSignUpSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         instance.set_password(validated_data['password'])
+
+
+class ClientSignUpValidateTokenSerializer(serializers.Serializer):
+    token = serializers.CharField()
+
+    def validate_token(self, value):
+        try:
+            token = TokenSignup.objects.get(key=value)
+        except TokenSignup.DoesNotExist:
+            raise serializers.ValidationError('Invalid token')
+        # check if expire
+        return value
+
+
 ##############################
 # USERS AS STAFF SERIALIZERS #
 ##############################
