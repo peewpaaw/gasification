@@ -33,6 +33,12 @@ class ConstructionObject(BaseModelTimeAt):
         null=True
     )
 
+    def get_work_packages_display_list(self):
+        if not self.work_packages:
+            return []
+        work_package_dict = dict(self.WORK_PACKAGES)
+        return [work_package_dict[wp] for wp in self.work_packages if wp in work_package_dict]
+
     def __str__(self):
         return f"{self.code}"
 

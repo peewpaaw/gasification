@@ -3,6 +3,10 @@ from rest_framework import serializers
 from .models import Counterparty, ConstructionObject
 
 
+############################
+# COUNTERPARTY SERIALIZERS #
+############################
+
 class CounterpartySerializer(serializers.ModelSerializer):
     class Meta:
         model = Counterparty
@@ -20,6 +24,13 @@ class CounterpartyUploadSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=255)
     guid = serializers.CharField(max_length=36)
 
+
+####################################
+# CONSTRUCTION OBJECTS SERIALIZERS #
+####################################
+
+class WorkPackageSerializer(serializers.Serializer):
+    pass
 
 class ConstructionObjectUploadSerializer(serializers.Serializer):
     counterparty = serializers.CharField(max_length=36, help_text="GUID 1С контрагента")
@@ -43,12 +54,17 @@ class ConstructionObjectUploadSerializer(serializers.Serializer):
 
 
 class ConstructionObjectSerializer(serializers.ModelSerializer):
+    work_packages = serializers.SerializerMethodField()
+
+    def get_work_packages(self, obj):
+        return obj.get_work_packages_display_list()
+
     class Meta:
         model = ConstructionObject
         fields = "__all__"
 
 
-class ConstructionObjectSimpleSerializer(serializers.ModelSerializer):
+class ConstructionObjectSimpleSerializer(ConstructionObjectSerializer):
     class Meta:
         model = ConstructionObject
         fields = ('id', 'code', 'address', 'work_packages')
