@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 from django.contrib.auth import get_user_model
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, filters
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -17,6 +17,8 @@ class CounterpartyViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Counterparty.objects.all()
     serializer_class = CounterpartySerializer
     permission_classes = [IsAdminUser]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['inn', 'name']
 
     @swagger_auto_schema(
         manual_parameters=[

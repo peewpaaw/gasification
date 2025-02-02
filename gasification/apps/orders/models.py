@@ -66,6 +66,7 @@ class Order(BaseModel):
     order_type = models.ForeignKey("OrderType", on_delete=models.CASCADE)
     selected_date = models.DateField()
     applicant = models.CharField(max_length=255)
+    phone_number = models.CharField(max_length=13)
 
     on_date = models.DateField(null=True, blank=True)
     employee = models.ForeignKey(

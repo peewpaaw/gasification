@@ -35,7 +35,7 @@ class OrderStatusHistorySerializer(serializers.ModelSerializer):
 class OrderUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
-        fields = ('construction_object', 'selected_date', 'applicant', 'order_type')
+        fields = ('construction_object', 'selected_date', 'applicant', 'order_type', 'phone_number')
 
 
 class OrderCreateSerializer(serializers.ModelSerializer):
@@ -52,7 +52,9 @@ class OrderCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ('construction_object', 'selected_date', 'applicant', 'order_type', 'created_by')
+        fields = ('construction_object', 'selected_date',
+                  'applicant', 'order_type',
+                  'phone_number', 'created_by')
 
 
 class OrderListRetrieveSerializer(serializers.ModelSerializer):
@@ -67,7 +69,7 @@ class OrderListRetrieveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ('id', 'construction_object', 'order_type', 'applicant',
+        fields = ('id', 'construction_object', 'order_type', 'applicant', 'phone_number',
                   'selected_date', 'on_date', 'status_history', 'created_at')
 
 
