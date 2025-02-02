@@ -5,6 +5,7 @@ from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from ..utils.paginations import CustomPageNumberPagination
 
@@ -12,7 +13,8 @@ from .services.notifications import send_signup_confirmation_email
 
 from .models import User, TokenSignup
 from .serializers import UserAsClientListRetrieveSerializer, UserAsClientCreateUpdateSerializer, UserInfoSerializer, \
-    UserAsStaffViewSerializer, UserAsStaffCreateSerializer, ClientSignUpSerializer, ClientSignUpValidateTokenSerializer
+    UserAsStaffViewSerializer, UserAsStaffCreateSerializer, ClientSignUpSerializer, ClientSignUpValidateTokenSerializer, \
+    CustomTokenObtainPairSerializer
 
 
 class UserAsClientViewSet(viewsets.ModelViewSet):
@@ -117,7 +119,6 @@ class UserAsStaffViewSet(viewsets.ModelViewSet):
         return super().update(request, *args, **kwargs)
 
 
-
 class UserMeView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = UserInfoSerializer
@@ -154,6 +155,7 @@ class ClientSignUpView(APIView):
         TokenSignup.objects.filter(user=token.user).delete()
         return Response({"status": "OK"}, status=status.HTTP_200_OK)
 
+
 class ClientSignUpValidateTokenView(APIView):
     serializer_class = ClientSignUpValidateTokenSerializer
 
@@ -169,6 +171,10 @@ class ClientSignUpValidateTokenView(APIView):
             "email": token.user.email,
         }
         return Response(response, status=status.HTTP_200_OK)
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 @api_view(['GET'])

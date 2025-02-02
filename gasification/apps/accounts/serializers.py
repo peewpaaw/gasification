@@ -1,6 +1,8 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.validators import UniqueValidator
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from apps.erp.serializers import CounterpartySimpleSerializer
 
@@ -117,3 +119,20 @@ class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'login', 'email', 'name', 'is_staff', 'is_active', 'counterparty')
+
+
+#########################
+# SIMPLEJWT SERIALIZERS #
+#########################
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        if not self.user.is_approved:
+            raise AuthenticationFailed("Учетная запись не подтверждена.", code='authorization')
+
+        if not self.user.is_active:
+            raise AuthenticationFailed("Учетная запись заблокирована.", code='authorization')
+
+        return data
