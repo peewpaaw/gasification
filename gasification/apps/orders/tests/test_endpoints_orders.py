@@ -39,6 +39,7 @@ def test_order_create_as_client(api_client_as_client,
         "order_type": order_type.id,
         "selected_date": datetime.date.today(),
         "applicant": "applicant",
+        "phone_number": "375291234567",
     }
     url = reverse('orders-list')
     response = api_client_as_client.post(url, data=order_data)
