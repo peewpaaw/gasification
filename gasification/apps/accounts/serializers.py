@@ -9,6 +9,11 @@ from apps.erp.serializers import CounterpartySimpleSerializer
 from .models import User, TokenSignup
 
 
+class UserSimpleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'login', 'name', 'is_staff')
+
 ##############################
 # USER AS CLIENT SERIALIZERS #
 ##############################

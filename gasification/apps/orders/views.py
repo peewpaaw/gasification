@@ -1,6 +1,6 @@
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework import viewsets, mixins, status
+from rest_framework import viewsets, mixins, status, generics
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -9,9 +9,9 @@ from rest_framework.views import APIView
 
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema, no_body
+from rest_framework.viewsets import GenericViewSet
 
 from apps.utils.permissions import IsOwner
-
 from apps.orders.services.order_status_flow import (order_accept, order_cancel,
                                                     order_on_confirm, order_agree, order_reject, CustomServiceError)
 from apps.orders.services.order_config import (get_order_count_per_day_for_period, order_creating_is_available,
@@ -19,9 +19,10 @@ from apps.orders.services.order_config import (get_order_count_per_day_for_perio
 
 from .filters import OrderFilter
 from .models import Order, OrderConfig, OrderConfigException, OrderType
-from .serializers import OrderListRetrieveSerializer, OrderOnConfirmSerializer, OrderCreateSerializer, \
-    OrderUpdateSerializer, OrderConfigSerializer, OrderConfigExceptionCreateSerializer, OrderConfigStatsQuerySerializer, \
-    OrderConfigUpdateSerializer, OrderTypeSerializer
+from .serializers import (OrderListRetrieveSerializer, OrderOnConfirmSerializer,
+                          OrderCreateSerializer, OrderUpdateSerializer, OrderConfigExceptionSerializer)
+from .serializers import (OrderConfigSerializer, OrderConfigExceptionCreateUpdateSerializer,
+                          OrderConfigStatsQuerySerializer, OrderConfigUpdateSerializer, OrderTypeSerializer)
 from ..utils.paginations import CustomPageNumberPagination
 
 
@@ -175,6 +176,35 @@ class OrderConfigView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class OrderConfigExceptionView(mixins.CreateModelMixin,
+                               mixins.UpdateModelMixin,
+                               mixins.ListModelMixin,
+                               GenericViewSet):
+    pagination_class = CustomPageNumberPagination
+    permission_classes = [IsAdminUser]
+    http_method_names = ['get', 'post', 'put']
+
+    def get_queryset(self):
+        return OrderConfigException.objects.all().order_by('-on_date', '-created_at')
+
+    def get_serializer_class(self):
+        if self.action in ('create', 'update', 'partial_update'):
+            return OrderConfigExceptionCreateUpdateSerializer
+        return OrderConfigExceptionSerializer
+
+    @swagger_auto_schema(tags=['config'])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @swagger_auto_schema(tags=['config'])
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @swagger_auto_schema(tags=['config'])
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+
 @swagger_auto_schema(
     tags=['config'],
     method='get',
@@ -216,7 +246,7 @@ def get_config_state_view(request, *args, **kwargs):
 @swagger_auto_schema(
     tags=['config'],
     method='post',
-    request_body=OrderConfigExceptionCreateSerializer,
+    request_body=OrderConfigExceptionCreateUpdateSerializer,
 )
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
@@ -226,7 +256,7 @@ def set_exception_date_view(request, *args, **kwargs):
 
         Используем для сокращенных дней, выходных дней (устанавливаем 0)
     """
-    serializer_class = OrderConfigExceptionCreateSerializer
+    serializer_class = OrderConfigExceptionCreateUpdateSerializer
     serializer_params = {
         "data": request.data,
         "context": {"request": request},
@@ -237,6 +267,7 @@ def set_exception_date_view(request, *args, **kwargs):
         existing_exception = OrderConfigException.objects.filter(on_date=request.data['on_date'])
         if existing_exception:
             serializer_params['instance'] = existing_exception.first()
+            #serializer_params['updated_by'] = request.user
 
     serializer = serializer_class(**serializer_params)
     if serializer.is_valid():

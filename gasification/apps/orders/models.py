@@ -138,4 +138,3 @@ class OrderConfigException(BaseModel):
     class Meta:
         verbose_name = 'Config (exceptions)'
         verbose_name_plural = 'Config (exceptions)'
-

@@ -18,9 +18,15 @@ class BaseModelCreatedBy(models.Model):
     created_by = models.ForeignKey(
         AUTH_USER_MODEL,
         on_delete=models.PROTECT,
-        related_name="%(app_label)s_%(class)s_related",
+        related_name="%(class)s_created_by",
     )
-    #updated_by = models.ForeignKey(AUTH_USER_MODEL, on_delete=models.PROTECT)
+    updated_by = models.ForeignKey(
+        AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name="%(class)s_updated_by",
+    )
 
     objects = models.Manager()
 

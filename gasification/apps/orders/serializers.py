@@ -5,6 +5,7 @@ from apps.erp.serializers import ConstructionObjectSimpleSerializer
 
 from .models import OrderType, Order, OrderStatusHistory, ORDER_STATUSES, OrderConfig, OrderConfigException
 from .services.order_config import order_can_be_created, order_creating_is_available
+from ..accounts.serializers import UserSimpleSerializer
 
 
 ##########################
@@ -22,6 +23,8 @@ class OrderTypeSerializer(serializers.ModelSerializer):
 ####################################
 
 class OrderStatusHistorySerializer(serializers.ModelSerializer):
+    created_by = UserSimpleSerializer()
+
     class Meta:
         model = OrderStatusHistory
         fields = "__all__"
@@ -91,7 +94,6 @@ class OrderConfigSerializer(serializers.ModelSerializer):
         exclude = ('id', 'created_by')
 
 
-
 class OrderConfigUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderConfig
@@ -100,14 +102,31 @@ class OrderConfigUpdateSerializer(serializers.ModelSerializer):
         extra_kwargs = {"min_date": {"required": False}, "max_date": {"required": False}}
 
 
-class OrderConfigExceptionCreateSerializer(serializers.ModelSerializer):
-    created_by = serializers.HiddenField(
-        default=serializers.CurrentUserDefault()
-    )
+class OrderConfigExceptionCreateUpdateSerializer(serializers.ModelSerializer):
+    created_by = serializers.HiddenField(default=None)
+    updated_by = serializers.HiddenField(default=None)
+
+    def create(self, validated_data):
+        validated_data['created_by'] = self.context['request'].user
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data['updated_by'] = self.context['request'].user
+        return super().update(instance, validated_data)
 
     class Meta:
         model = OrderConfigException
-        fields = ('on_date', 'order_count_per_day', 'created_by')
+        fields = ('on_date', 'order_count_per_day', 'created_by', 'updated_by')
+        extra_kwargs = {"created_by": {"required": False}, "updated_by": {"required": False}}
+
+
+class OrderConfigExceptionSerializer(serializers.ModelSerializer):
+    created_by = UserSimpleSerializer()
+    updated_by = UserSimpleSerializer()
+
+    class Meta:
+        model = OrderConfigException
+        fields = "__all__"
 
 
 class OrderConfigStatsQuerySerializer(serializers.Serializer):
