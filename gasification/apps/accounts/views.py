@@ -1,7 +1,9 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema, no_body
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, action
 
+from rest_framework import filters
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -17,13 +19,33 @@ from .serializers import UserAsClientListRetrieveSerializer, UserAsClientCreateU
     CustomTokenObtainPairSerializer
 
 
-class UserAsClientViewSet(viewsets.ModelViewSet):
+class UserBaseViewSet(viewsets.ModelViewSet):
+    pagination_class = CustomPageNumberPagination
+    permission_classes = [IsAdminUser]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['is_active']
+    search_fields = ['name', 'email']
+    ordering_fields = ['name', 'email']
+    http_method_names = ['get', 'post', 'put', 'delete']
+
+    def change_active_status(self, instance, is_active):
+        if is_active == instance.is_active:
+            return Response({"detail": ""}, status=status.HTTP_400_BAD_REQUEST)
+        instance.is_active = is_active
+        instance.save()
+        return Response({"detail": ""}, status=status.HTTP_200_OK)
+
+    def deactivate(self, request, pk):
+        return self.change_active_status(self.get_object(), False)
+
+    def activate(self, request, pk=None):
+        return self.change_active_status(self.get_object(), True)
+
+
+class UserAsClientViewSet(UserBaseViewSet):
     """
         API endpoints for clients
     """
-    pagination_class = CustomPageNumberPagination
-    permission_classes = [IsAdminUser]
-    http_method_names = ['get', 'post', 'put', 'delete']
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve',):
@@ -73,22 +95,25 @@ class UserAsClientViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
 
-    @swagger_auto_schema(tags=['clients'], operation_summary="Блокирует пользователя")
+    @swagger_auto_schema(tags=['clients'], operation_summary="Удаление пользователя")
     def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        instance.is_active = False
-        instance.save()
-        return Response({"detail": "User has been deactivated."}, status=status.HTTP_204_NO_CONTENT)
+        return super().destroy(request, *args, **kwargs)
+
+    @swagger_auto_schema(tags=['clients'], request_body=no_body, operation_summary="Блокировка пользователя")
+    @action(detail=True, methods=['post'], url_path='block')
+    def block(self, request, pk=None):
+        return super().deactivate(request, pk)
+
+    @swagger_auto_schema(tags=['clients'], request_body=no_body, operation_summary="Разблокировать пользователя")
+    @action(detail=True, methods=['post'], url_path='unblock')
+    def unblock(self, request, pk=None):
+        return super().activate(request, pk)
 
 
-class UserAsStaffViewSet(viewsets.ModelViewSet):
+class UserAsStaffViewSet(UserBaseViewSet):
     """
         API endpoints for staff
     """
-    pagination_class = CustomPageNumberPagination
-    permission_classes = [IsAdminUser]
-    http_method_names = ['get', 'post', 'put', 'delete']
-
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve',):
             return UserAsStaffViewSerializer
@@ -117,6 +142,16 @@ class UserAsStaffViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(tags=['staff'], operation_summary="Удаление пользователя")
     def destroy(self, request, *args, **kwargs):
         return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(tags=['staff'], request_body=no_body, operation_summary="Блокировка пользователя")
+    @action(detail=True, methods=['post'], url_path='block')
+    def block(self, request, pk=None):
+        return super().deactivate(request, pk)
+
+    @swagger_auto_schema(tags=['staff'], request_body=no_body, operation_summary="Разблокировать пользователя")
+    @action(detail=True, methods=['post'], url_path='unblock')
+    def unblock(self, request, pk=None):
+        return super().activate(request, pk)
 
 
 class UserMeView(APIView):

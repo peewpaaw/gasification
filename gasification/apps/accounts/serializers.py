@@ -17,7 +17,8 @@ class UserAsClientListRetrieveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'login', 'email', 'name', 'last_login', 'is_active', 'counterparty',)
+        fields = ('id', 'login', 'email', 'name', 'last_login',
+                  'is_active', 'is_approved', 'counterparty', )
 
 
 class UserAsClientCreateUpdateSerializer(serializers.ModelSerializer):
