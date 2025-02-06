@@ -24,6 +24,9 @@ class CounterpartyUploadSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=255)
     guid = serializers.CharField(max_length=36)
 
+    def create(self, validated_data):
+        return Counterparty.objects.create(**validated_data)
+
 
 ####################################
 # CONSTRUCTION OBJECTS SERIALIZERS #
@@ -35,7 +38,7 @@ class WorkPackageSerializer(serializers.Serializer):
 class ConstructionObjectUploadSerializer(serializers.Serializer):
     counterparty = serializers.CharField(max_length=36, help_text="GUID 1С контрагента")
     code = serializers.CharField(max_length=255, help_text="Код объекта ПиС")
-    guid = serializers.CharField(max_length=36, help_text="Код объекта ПиС")
+    guid = serializers.CharField(max_length=36, help_text="GUID 1С объекта ПиС")
     address = serializers.CharField(max_length=255, help_text="Адрес объета ПиС")
     work_packages = serializers.ListSerializer(child=serializers.IntegerField(), help_text="Комплекс работ (в массиве)")
 
@@ -51,6 +54,17 @@ class ConstructionObjectUploadSerializer(serializers.Serializer):
         if counterparty.exists():
             return counterparty.first()
         raise serializers.ValidationError(f"Counterparty with guid `{value}` does not exist")
+
+    def create(self, validated_data):
+        # return ConstructionObject.objects.create(
+        #     guid=validated_data['guid'],
+        #     code=validated_data['code'],
+        #     work_packages=validated_data['work_packages'],
+        #     address=validated_data['address'],
+        #     counterparty=validated_data['counterparty_guid']
+        # )
+        return ConstructionObject.objects.create(**validated_data)
+
 
 
 class ConstructionObjectSerializer(serializers.ModelSerializer):

@@ -1,5 +1,5 @@
 from abc import abstractmethod
-
+from django.db import IntegrityError
 from django.contrib.auth import get_user_model
 from rest_framework import viewsets, status, filters
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -70,11 +70,15 @@ class ERPUploadBaseView(APIView):
     def post(self, request, *args, **kwargs):
         serializer_class = self.get_serializer_class()
         data = request.data if isinstance(request.data, list) else [request.data]
-        created, updated = 0, 0
+        created, updated, skipped = 0, 0, 0
+        exceptions = []
 
         for item in data:
             serializer = serializer_class(data=item)
-            serializer.is_valid(raise_exception=True)
+            if not serializer.is_valid():
+                skipped += 1
+                exceptions.append({"guid": item['guid'], "error": serializer.errors})
+                continue
 
             #existed_qs = self.get_model_class().objects.filter(guid=[item["guid"] for item in data])
             existed_qs = self.get_model_class().objects.filter(guid=item['guid'])
@@ -82,12 +86,22 @@ class ERPUploadBaseView(APIView):
                 existed_qs.update(**serializer.validated_data)
                 updated += 1
                 continue
-            self.get_model_class().objects.create(**serializer.validated_data)
+            try:
+                #self.get_model_class().objects.create(**serializer.validated_data)
+                serializer.create(validated_data=serializer.validated_data)
+            #except IntegrityError as e:
+            except Exception as e:
+                skipped += 1
+                exceptions.append({"guid": item['guid'], "error": str(e)})
+                continue
+
             created += 1
 
         result = {
             'created': created,
             'updated': updated,
+            'skipped': skipped,
+            'exceptions': exceptions,
         }
         return Response(
             {"success": True, "result": result},
